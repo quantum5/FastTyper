@@ -3,6 +3,8 @@
 #define id68C60171_0140_4DE1_B7255EFF557A74F9
 
 #include <Window.hpp>
+#include <commctrl.h>
+#include <shellapi.h>
 
 class MainWindow : public Window {
 public:
@@ -13,6 +15,9 @@ protected:
     LRESULT OnCreate();
     LRESULT OnDestroy();
     void OnPaint();
+    virtual void OnDrop(HDROP hDrop);
+    virtual DWORD OnDragDrop(UINT cf, HGLOBAL hData, HWND hWnd, DWORD dwKeyState, POINTL pt);
+    LPVOID m_dropTarget;
 
     virtual HICON GetIcon();
     
@@ -21,9 +26,13 @@ protected:
     HWND m_repeatUD, m_repeat, m_repeatLabel;
     HWND m_messageLabel, m_message;
     HWND m_executeButton, m_terminateButton;
+    HWND m_scriptLabel, m_script, m_scriptBrowse;
 private:
-    HFONT hFont;
+    HFONT hFont, hFontMono;
     HBRUSH hBrush;
+    UDACCEL *udaSecondAccel;
+    static DWORD s_OnDragDrop(UINT cf, HGLOBAL hData, HWND hWnd,
+                       DWORD dwKeyState, POINTL pt, void *pUserData);
 };
 
 #endif // header

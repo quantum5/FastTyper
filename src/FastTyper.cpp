@@ -1,18 +1,20 @@
 #include <MainWindow.hpp>
 #include <commctrl.h>
+#include <objbase.h>
 
 #pragma comment(lib, "comctl32.lib")
+#pragma comment(lib, "ole32.lib")
 
-/*class CCoInitialize {
+class CCoInitialize {
 public:
     CCoInitialize() : m_hr(CoInitialize(NULL)) { }
     ~CCoInitialize() { if (SUCCEEDED(m_hr)) CoUninitialize(); }
     operator HRESULT() const { return m_hr; }
     HRESULT m_hr;
-};*/
+};
 
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-    // CCoInitialize comInit;
+    CCoInitialize comInit;
     InitCommonControls();
 
     MainWindow *win = MainWindow::Create("FastTyper");

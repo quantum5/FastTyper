@@ -1,5 +1,8 @@
 #include <window.hpp>
 
+#pragma comment(lib, "user32.lib")
+#pragma comment(lib, "gdi32.lib")
+
 HWND Window::WinCreateWindow(DWORD dwExStyle, LPCTSTR pszName,
                              DWORD dwStyle, int x, int y, int cx,
                              int cy, HWND hwndParent, HMENU hmenu)
