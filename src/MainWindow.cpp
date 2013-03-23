@@ -7,8 +7,7 @@
 #include <shlobj.h>
 
 #include <limits.h>
-
-#include <DragAndDrop.h>
+#include <qdebug.h>
 
 #define BGCOLOUR RGB(0xF0, 0xF0, 0xF0)
 #define LEFT(x, y, cx, cy) x, y, cx, cy
@@ -85,7 +84,7 @@ LRESULT MainWindow::OnCreate()
     m_messageLabel = CreateWindowEx(0, WC_STATIC,
             TEXT("Message:"), WS_CHILDWINDOW | WS_VISIBLE | SS_LEFT,
             0, 0, 0, 0, m_hwnd, NULL, GetInstance(), NULL);
-    m_message = CreateWindowEx(WS_EX_CLIENTEDGE , WC_EDIT,
+    m_message = CreateWindowEx(WS_EX_CLIENTEDGE, WC_EDIT,
             NULL, WS_CHILDWINDOW | WS_VISIBLE | ES_LEFT |
                   ES_MULTILINE | ES_AUTOVSCROLL,
             0, 0, 0, 0, m_hwnd, NULL, GetInstance(), NULL);
@@ -146,53 +145,11 @@ LRESULT MainWindow::OnCreate()
     Button_Enable(m_terminateButton, FALSE);
     SHAutoComplete(m_script, SHACF_FILESYSTEM | SHACF_USETAB);
     
-    // Drag and Drop
-    DragAcceptFiles(m_hwnd, TRUE);
-    
-    UINT cf = CF_TEXT;
-    MyDragDropInit(GetProcessHeap());
-    m_dropTarget = MyRegisterDragDrop(m_message, &cf, 1, WM_NULL,
-                       MainWindow::s_OnDragDrop, this);
+    if (!m_dropTarget.DragDropRegister(m_hwnd))
+        MessageBox(m_hwnd, TEXT("Failed to register Drag and Drop handler"),
+                   TEXT("FastTyper Error"), MB_ICONERROR);
     
     return 0;
-}
-
-DWORD MainWindow::OnDragDrop(UINT cf, HGLOBAL hData, HWND hWnd,
-                             DWORD dwKeyState, POINTL pt)
-{
-    if (cf == CF_TEXT) {
-        LPVOID pData = GlobalLock(hData);
-        if (pData == NULL)
-            return DROPEFFECT_NONE;
-        SendMessage(m_message, EM_REPLACESEL, 0, (LPARAM) pData);
-        GlobalUnlock(hData);
-        return DROPEFFECT_COPY;
-    }/* else if (cf == CF_HDROP) {
-        LPVOID pData = GlobalLock(hData);
-        if (pData == NULL)
-            return DROPEFFECT_NONE;
-        
-        LPDROPFILES data = (LPDROPFILES) pData;
-        if (data->fWide) {
-            LPWSTR file = (LPWSTR) (((LPBYTE) pData) + data->pFiles);
-            SetWindowTextW(m_script, file);
-        } else {
-            LPSTR file = (LPSTR) (((LPBYTE) pData) + data->pFiles);
-            SetWindowTextA(m_script, file);
-        }
-        
-        GlobalUnlock(hData);
-        return DROPEFFECT_COPY;
-    }*/
-    return DROPEFFECT_NONE;
-}
-
-void MainWindow::OnDrop(HDROP hDrop)
-{
-    TCHAR szFile[MAX_PATH];
-    
-    if (DragQueryFile(hDrop, 0, szFile, MAX_PATH))
-        SetWindowText(m_script, szFile);
 }
 
 LRESULT MainWindow::OnDestroy()
@@ -215,8 +172,6 @@ LRESULT MainWindow::OnDestroy()
     DestroyWindow(m_scriptBrowse);
     DestroyWindow(m_executeButton);
     DestroyWindow(m_terminateButton);
-    
-    MyRevokeDragDrop((PMYDROPTARGET) m_dropTarget);
     delete [] udaSecondAccel;
     return 0;
 }
@@ -321,8 +276,11 @@ LRESULT MainWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_CTLCOLORSTATIC:
             SetBkColor((HDC) wParam, BGCOLOUR);
             return (INT_PTR) hBrush;
-        case WM_DROPFILES:
-            OnDrop((HDROP) wParam);
+        case WM_DROPTEXT:
+            SendMessage(m_message, EM_REPLACESEL, 0, lParam);
+            return 0;
+        case WM_DROPFILE:
+            SetWindowText(m_script, (LPTSTR) lParam);
             return 0;
     }
     return __super::HandleMessage(uMsg, wParam, lParam);
@@ -334,17 +292,10 @@ MainWindow *MainWindow::Create(LPCTSTR szTitle)
     if (self &&
         self->WinCreateWindow(0,
                 szTitle, WS_OVERLAPPEDWINDOW,
-                CW_USEDEFAULT, CW_USEDEFAULT, 484, 362,
+                CW_USEDEFAULT, CW_USEDEFAULT, 640, 480,
                 NULL, NULL)) {
         return self;
     }
     delete self;
     return NULL;
-}
-
-DWORD MainWindow::s_OnDragDrop(UINT cf, HGLOBAL hData, HWND hWnd,
-                               DWORD dwKeyState, POINTL pt, void *pUserData)
-{
-    MainWindow *self = (MainWindow*) pUserData;
-    return self->OnDragDrop(cf, hData, hWnd, dwKeyState, pt);
 }
