@@ -21,7 +21,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (win) {
         ShowWindow(win->GetHWND(), nCmdShow);
         MSG msg;
-        while (GetMessage(&msg, NULL, 0, 0)) {
+        while (GetMessage(&msg, NULL, 0, 0) > 0) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
